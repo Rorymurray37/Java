@@ -1,0 +1,9 @@
+/**
+ * 
+ */
+/**
+ * @author rorymurray
+ *
+ */
+module RainbowTables {
+}
