@@ -1,0 +1,1193 @@
+﻿Classification of Early Parkinson’s
+Disease Using Machine Learning
+Author: Eamonn Fox
+Supervisor: Dr. James Duggan
+BSc Computer Science and Information Technology
+National University of Ireland, Galway
+April 3, 2020
+
+Declaration
+I hereby certify that the material, which I now submit for assessment on the programmes
+of study leading to the award of BSc of Computer Science and Information Technology,
+is entirely my own work and has not been taken from the work of others except to the
+extent that such work has been cited and acknowledged within the text of my own work.
+No portion of the work contained in this thesis has been submitted in support of an
+application for another degree or qualification to this or any other institution.
+———————————-
+Eamonn Fox April 3, 2020
+1
+
+Contents
+1          Introduction                                                                            5
+2          Literature Review                                                                       7
+2.1                              Machine Learning in Medicine & Parkinsons                         7
+           2.1.1                 Motor symptoms                                                    7
+           2.1.2                 Non-motor symptoms                                                8
+           2.1.3                 Cerebrospinal Fluid                                               8
+           2.1.4                 Imaging Markers                                                   8
+           2.1.5                 Genetics                                                          8
+           2.1.6                 Phenotypes                                                        9
+2.2                              Machine Learning Classification                                   9
+           2.2.1                 Support Vector Machines                                           9
+           2.2.2                 K Nearest Neighbors Classifier                                    10
+           2.2.3                 Random Forest Classifier                                          10
+           2.2.4                 Naive Bayes Classifier                                            10
+           2.2.5                 Class Balancing                                                   11
+           2.2.6                 Principal Component Analysis                                      11
+2.3        Synthesis                                                                               12
+3                                Research Aims and objectives                                      13
+4                                Data Preparation and Exploratory Data Analysis                    14
+4.1        Feature Description                                                                     14
+           4.1.1                 Unified Parkinson’s Disease Rating Scale (UPDRS)                  14
+           4.1.2                 University of Pennsylvania Smell Identification Test (UPSIT) .    14
+           4.1.3                 Epworth Sleepiness Scale (ESS)                                    14
+           4.1.4                 Benton Judgement of Line Orientation Test (BJLOT)                 14
+           4.1.5                 Scales for Outcomes in Parkinson’s Disease (SCOPA)                14
+           4.1.6                 Geriatric Depression Scale (GDS)                                  15
+           4.1.7                 Montreal Cognitive Assessment (MoCA)                              15
+           4.1.8                 Questionnaire for Impulsive-Compulsive Disorders in Parkinson’s
+                                 Disease (QUIP)                                                    15
+           4.1.9                 Cereborospinal Fluid (CSF)                                        15
+           4.1.10                Neuroimaging                                                      15
+           4.1.11                Genetic Data                                                      15
+4.2                              Data Preparation Challenges                                       15
+4.3        Data Preparation                                                                        16
+4.4                              Missing Values and Imputation                                     17
+4.5                              Exploratory Data Analysis                                         19
+4.6                              Phenotype switching prediction                                    23
+5          Methods                                                                                 25
+5.1        Outline                                                                                 25
+5.2                              Methods for initial prediction                                    25
+5.3                              Hyperparameter Tuning                                             26
+2
+
+5.4               Methods for comparison of balancing and dimensionality reduction tech-
+                  niques                                                                     26
+5.5               Producing subset of non-expensive tests to predict early Parkinson’s       27
+6                 Results                                                                    28
+6.1               Initial results: no feature reduction                                      28
+6.2               PCA results                                                                30
+6.3               Random Forest Importance feature selection results                         33
+6.4               Comparison of dimensionality reduction techniques .                        36
+6.5               Results of subset of data                                                  37
+7                 Conclusion                                                                 39
+7.1               Limitations                                                                39
+                  A Appendix                                                                 41
+A.1               EDA                                                                        41
+A.2               Results                                                                    44
+List of Figures
+1                 The Data Science Process (O’Neil & Schutt, 2014) . .                       6
+2                 Code snippet - "lambda" and "apply" functions                              17
+3                 Barchart of missing values per feature                                     18
+4                 Nullity matrix of missing values per feature                               18
+5                 Nullity matrix of missing values for genetic data . .                      19
+6                 Class Counts Comparison                                                    20
+7                 Correlation of features                                                    21
+8                 Correlation of top 10 features                                             22
+9                 Distribution plots                                                         23
+10                Box plot of features                                                       24
+11                ROC curves for classifiers on unbalanced data set  .                       29
+12                PCA plot comparison                                                        31
+13                ROC curves for classifiers on unbalanced data set with PCA                 32
+14                Random Forest feature importances barchart                                 35
+15                ROC curves for classifier on unbalanced data set with Random forest fea-
+ture selection                                                                               36
+16                ROC curve for SVM with each feature reduction technique                    37
+17                Feature importances for inexpensive tests barchart                         38
+18                Age at onset extra 1                                                       41
+19                Age at onset extra 2                                                       42
+20                Complete distributions                                                     43
+21                No feature reduction results with random over-sampling                     44
+22                No feature reduction results with random under-sampling                    44
+23                No feature reduction results with SMOTE balancing                          44
+24                PCA results with random over-sampling                                      44
+25                PCA results with random under-sampling                                     45
+26                PCA results with SMOTE balancing                                           45
+27                Random forest feature selection results with random over-sampling          45
+3
+
+28                                                                             Random forest feature selection results with random under-sampling . . .          45
+29                                                                             Random forest feature selection results with SMOTE balancing                      46
+List of Tables
+1                                                                              Mean and standard deviation of features for each class                            20
+2                                                                              Characteristics of all patients with Parkinson’s and at different ages at onset   22
+3                                                                              Performance metrics for classifiers with no feature reduction or balancing        28
+4                                                                              Summary of classifier performance on the non feature reduced data set . .         29
+5                                                                              Performance metrics for classifiers on unbalanced data set with PCA  . . .        30
+6                                                                              Summary of classifier performance on the PCA reduced data set                     32
+7                                                                              Performance metrics for classifiers on unbalanced data set with Random
+forest feature selection                                                                                                                                         33
+8                                                                              Example of ranked Random forest feature importances                               34
+9                                                                              Summary of classifier performance on the Random forest feature selection
+reduced data set                                                                                                                                                 35
+10                                                                             Summary of feature reduction technique accuracies                                 37
+11                                                                             Performance metrics for subset of inexpensive tests                               38
+Abbreviations
+Aβ42 Amyloid beta peptide1-42
+α-syn Alpha-synuclein
+AUC Area Under the Curve
+BJLOT Benton Judgement of Line test
+CSF Cerebrospinal Fluid
+DatSCAN Dopamine transporter Scan
+ESS Epworth Sleepiness Scale
+GDS Geriatric Depression Scale
+KNN K Nearest Neighbor
+MoCA Montreal Cognitive Assessment
+PIGD Postural Instability and Gaid Disorder Dominant
+PCA Principal Component Analysis
+PPMI Parkinson’s Progression Marker Initiative
+P-tau Phosphorylated at threonine 181
+QUIP Questionnaire for Impulsive-Compulsive Disorders in Parkinson’s Disease
+ROC Receiver Operating Characteristic
+SCOPA Scales for Outcomes in Parkinson’s Disease
+SMOTE Synthetic Minority Over-sampling TEchnique
+SPECT Single Photon Emission Computed Tomography
+SVM Support Vector Machine
+TD Tremor Dominant
+T-tau Total tau
+UPDRS or MDS-UPDRS Movement Disorder Society - Unified Parkinson’s Disease
+Rating Scale
+UPSIT University of Pennsylvania Smell Identification Test
+4
+
+1                                                                                             Introduction
+This project explores Parkinson’s disease related data using data analysis and machine
+learning technologies.  The data used in the analysis is the Parkinson’s Progression
+Marker Initiative (PPMI) Parkinson’s disease data set. All data preparation, analysis, and
+visualisation is done using the Python libraries Pandas, Numpy, Matplotlib, Seaborn, and
+Scikit-learn in a Jupyter notebook.
+Parkinson’s disease is a neurodegenerative disease that affects an estimated 7 - 10 mil-
+lion people worldwide. The main symptoms are tremor, postural instability, and rigidity,
+but can include loss of memory and cognitive ability as well as sleep disorders.  The
+cause of the disease is unknown but is believed to stem from numerous different factors.
+Parkinson’s is characterised by the loss of dopamine producing neurons in the brain,
+which in turn can lead to conditions such as depression.
+Early detection of the disease is essential in providing the necessary treatments. Phys-
+ical signs of Parkinson’s usually develop late in the progression of the disease often only
+appearing years after the onset of the disease.  This phase prior to the onset of motor
+symptoms is called the premotor or prodromal phase, and can last anywhere from five
+to twenty years making early detection difficult.
+Predicting disease pathology is another important part in the treatment of the dis-
+ease. If the patient knows what to expect about the progression of their disease they can
+better prepare for the challenges they will face.  Predicting the progression of the dis-
+ease is helped by the discovery of phenotypes or subtypes of the disease. For example,
+motor symptoms can appear in different ways for different phenotypes.  If the patient
+knows which phenotype they belong to they can prepare to get treatment for the specific
+symptoms associated with their phenotype.
+There is no known cure for Parkinson’s disease, and treatments aim to alleviate the
+symptoms. The most common medication prescribed for the condition is levodopa (L-
+DOPA) which increases dopamine concentrations in the brain. This drug treats the symp-
+toms only and will not change or slow the progression of the disease. L-DOPA and other
+medications become less effective as the disease progresses. In this project, methods to
+detect early Parkinson’s and predict the progression of the disease are explored.
+PPMI is a longitudinal study funded by the Michael J. Fox Foundation that aims to
+find different characteristics through which the disease can be identified.  These natu-
+rally occurring characteristics are called biomarkers, and are used in the diagnosis and
+treatment of Parkinson’s disease. The database includes demographic, clinical, biologic
+sampling, imaging, and genetic data across 72 different tables. A subset of this data has
+been prepared for the purposes of this project.
+The process that is followed in this project is outlined in Figure 1.  The first step
+required for this project is to process and clean the PPMI data. From there, exploratory
+data analysis is performed to gain an intuition for the data. Where needed, more data
+preparation and cleaning is performed throughout the project. Machine learning is then
+applied to predict early Parkinson’s, and the results are visualised and analysed.
+5
+
+Figure 1: The Data Science Process (O’Neil & Schutt, 2014)
+6
+
+2                                                                                              Literature Review
+In this literature review, we gain a better understanding of the previous work done in
+the area of Parkinson’s disease research. Much of this research was carried out prior to
+having finalised the data set used for analysis, as it was the main source of information
+on which features to add. We also familiarise ourselves with different machine learning
+techniques that are used in this project.
+2.1                                                                                            Machine Learning in Medicine & Parkinsons
+Machine learning presents great opportunities in the field of medicine. It has been used
+to aid in tasks such as early detection of diseases, predicting the progression of diseases,
+disease subtype discovery, and drug development. Researchers recently found a way to
+identify Alzheimer’s disease using speech data (Liu et al. 2020). Machine learning is also
+extensively used in cancer research, with accurate prediction and prognosis being the
+most important areas of study.
+Within Parkinson’s disease research, machine learning has been used in the identifi-
+cation of biomarkers of the progression of the disease. Studies using the PPMI data have
+shown that it is possible to predict early Parkinson’s with an accuracy above 95% using
+multiple different features (Prashanth, S. D. Roy, et al. 2016). Other research on the dif-
+ferent symptoms and aspects of Parkinson’s is reviewed in the following sections. All of
+these studies were carried out on the PPMI data.
+2.1.1                                                                                          Motor symptoms
+Motor symptoms are the most obvious indicators of Parkinson’s, and they usually
+worsen as the disease progresses. Common motor features include tremor, bradykine-
+sia (slow movement), rigidity, and postural instability and gait disorder (PIGD). A useful
+scale for rating the severity of motor symptoms is the Unified Parkinson’s Disease Rating
+Scale (UPDRS). It also includes measurements for some non-motor features.
+In their study comparing machine learning techniques using only the patient ques-
+tionnaire part of UPDRS, researchers were able to show that their models distinguished
+between Parkinson’s disease patients and healthy controls with high accuracy of above
+95% (Prashanth and Sumantra Dutta Roy 2018). This finding is quite significant as using
+only a patient questionnaire would greatly reduce the cost of diagnosis for the patient.
+UPDRS is useful in monitoring disease progression. Researchers found that the motor
+symptoms of Parkinson’s patients in the PPMI cohort increased in a linear fashion for the
+first five years (Holden et al. 2018). A disadvantage that UPDRS has is that it requires a
+clinician to record all the information over several visits making it time consuming, and
+in the case of the patient questionnaire section relies on individual patient input which
+could be unreliable.
+Other studies used wearable technology, such as smart watch data to detect symp-
+toms and assess symptom severity associated with Parkinson’s (Mahadevan et al. 2020;
+Wagner, Fixler, and Resheff 2017).
+7
+
+2.1.2                                                                                           Non-motor symptoms
+Non-motor symptoms can be as difficult to deal with for the Parkinson’s patient as the
+motor symptoms, as they often include a decline in cognitive ability. In later stages of the
+disease, Parkinson’s can cause dementia. The most common non-motor symptoms are
+REM sleep disorders and olfactory dysfunction. Non-motor symptoms such as olfactory
+dysfunction can be used to identify the premotor or prodromal phase. The University
+of Pennsylvania Smell Identification Test (UPSIT) is a test to evaluate olfactory function.
+In a 2014 study, researchers built predictive models using only UPSIT and sleep disorder
+data that could identify Parkinson’s with an accuracy of 85% (Prashanth, S. D. Roy, et al.
+2014).
+2.1.3                                                                                           Cerebrospinal Fluid
+The Cerebrospinal Fluid (CSF) markers alpha-synuclein (α-syn), amyloid beta peptide
+1-42 (Aβ42), total tau (T-tau), and phosphorylated at threonine 181 (P-tau) have been
+widely studied as biomarkers for Parkinson’s disease.  The CSF biomarkers have been
+shown to be lower in concentration in Parkinson’s disease patients than in healthy con-
+trols (Kang, Irwin, et al. 2013). Kang, Irwin, et al. (ibid.) showed that decreased levels of
+Aβ42 and P-tau could be used in the early diagnosis of Parkinson’s, and that decreased
+concentrations of α-syn and T-tau are correlated with an increase in motor symptom
+severity. Another interesting finding in this study is that there is an association between
+lower levels of Aβ42and p-tau, and a postural instability gait disturbance dominant phe-
+notype, but not with the tremor dominant or indeterminate phenotypes. In Kang, Mol-
+lenhauer, et al. (2016), the researchers further investigate the association of CSF markers
+with subtypes of Parkinson’s. Here they show that CSF is significantly lower in certain
+genotypes associated with Parkinson’s.
+2.1.4                                                                                           Imaging Markers
+Neuroimaging data of dopamine transporters (DAT) using Single Photon Emission Com-
+puted Tomography (SPECT) have been shown to have high predictive power for detect-
+ing early Parkinson’s (Towey, Bain, and Nijran 2011).  Towey, Bain, and Nijran (ibid.)
+correctly classified patients as Parkinson’s or healthy controls with an accuracy of 94.8%
+using a naive Bayes classifier. It is particularly useful when the Parkinsonism symptoms
+the patient is showing are inconclusive. The scan costs the patient approximately e 1200,
+making it considerably more expensive than other tests such as CSF test which only need
+a lumbar puncture to complete.
+2.1.5                                                                                           Genetics
+Certain genetic mutations have been found to be associated with Parkinson’s disease. A
+study in 1997 found a link between the SNCA gene and families that had many members
+with Parkinson’s disease (Vogel 1997). Other genetic mutations associated with Parkin-
+son’s occur in the LRRK2, GBA, PARK2, PARK7, and PINK1 genes. Researchers found
+that there is a low degree of genetic heterogeniety within the PPMI cohort (Nalls et al.
+2016). This means that the different genetic mutations that are associated with Parkin-
+son’s occur in a small number of genetic loci. The cost of testing for the different Parkin-
+son’s disease associated genes costs approximately e 4000.
+8
+
+2.1.6                                                                                           Phenotypes
+Within Parkinson’s there are a number of different subtypes or phenotypes.  Two of
+these phenotypes are the tremor dominant (TD) and postural instability and gait dis-
+order (PIGD) phenotypes which have been mentioned above.  It has been shown that
+there is considerable instability of these phenotypes where patients who appear to be in
+one phenotype move to another within the first year after diagnosis.  Research on the
+PPMI cohort has found that 39% of the PIGD phenotype move to the TD or indetermi-
+nate phenotypes, and 18% of TD patients shift to the PIGD or indeterminate phenotypes
+within the first year (Simuni et al. 2016). This shows that there is significant variability
+in Parkinson’s related motor phenotypes, and the difficulty faced in trying to predict the
+progression of the disease for individual patients.  Other phenotypes include different
+ages at onset of the disease. This was investigated in Pagano et al. (2016)
+2.2                                                                                             Machine Learning Classification
+Classification is a supervised learning method. It attempts to categorise an unseen obser-
+vation. It does this by deriving a function that can predict an observation’s class based
+on its features using labelled training data.  This function can then be used to predict
+the class of the unseen observation. Classifying observations as healthy controls or early
+Parkinson’s patients based on features such as demographics and clinical test data is ex-
+plored in this project.
+2.2.1                                                                                           Support Vector Machines
+A Support Vector Machine (SVM) is a non-probabilistic model used in classification. The
+model aims to create a representation of the training observations so that the target values
+of the observations are separated by a gap that is as wide as possible.
+SVMs are an extension of a maximal margin classifier (James et al. 2013). A maximal
+margin classifier generates a hyperplane that separates the different classes in the training
+set. If the classes are perfectly separable there will be an infinite number of hyperplanes
+that can separate the classes. To find the hyperplane that should, in most cases, classify
+new data points with the highest accuracy the hyperplane that lies on the midpoint of
+the maximal margin between the classes is chosen.  An unseen observation’s class is
+predicted by putting it into the class depending on which side of the hyperplane it occurs.
+Maximal margin classifiers work well when the data points are perfectly separable with
+a large margin between classes.  If there is an outlier data point that is much closer to
+the other class than other data points it will create a much smaller margin than would be
+necessary to classify new observations i.e. it is less generalisable for unseen data. This is
+because a maximal margin classifier uses a hard margin.
+SVMs improve on the maximal margin classifier’s problems of using a hard margin
+by introducing the concept of a soft margin. This means that the model will not consider
+data points that are within a certain distance of the hyperplane. These data points are
+called slack variables. Due to slack variables SVMs will not be as sensitive to individual
+data points, and creates a more generalisable model (ibid.).  It also does not need the
+classes to be perfectly separable.
+9
+
+2.2.2                                                                                           K Nearest Neighbors Classifier
+The K Nearest Neighbors (KNN) algorithm can be used for classification and regression
+problems.  It is a lazy learner meaning all computations are deferred until a new ob-
+servation is being classified. The classifier’s nearest neighbours in the multidimensional
+feature space can be calculated using distance metrics such as Euclidean, Manhattan, and
+Minkowski distance. The K value determines the amount of neighbours of the test obser-
+vation should be considered when classifying. If the K value is 1 then the test observation
+gets the class of its nearest neighbour. For K values greater than one, the mode class of its
+K nearest neighbours is output as the predicted class. Larger values of K reduce the effect
+of noise on the classifiers accuracy at the expense of being more prone to underfitting the
+training set.
+2.2.3                                                                                           Random Forest Classifier
+Decision trees split the data set through a series of rules applied to the variables of the
+data set. It starts splitting the data using some measure of impurity such as Gini index or
+information gain to determine the best feature to split on. This process is then repeated
+recursively on the split subsets until a leaf node is created which contains a class. A new
+observation is predicted by traversing the tree that compares the new observation to each
+node of the tree until a leaf node is reached. The class contained within the leaf node is
+output as the predicted class. A disadvantage of decision trees is that they are prone to
+overfitting the training set, and therefore generalising poorly for unseen data. They are
+also prone to having a high degree of variance, meaning that changing a small number
+of samples in the training data will create a vastly different model.
+Random forests improve on single decision trees by using a collection of decorrelated
+"bagged" trees (James et al. 2013). Bagging means that the model is trained on many dif-
+ferent training sets, and in the case of random forests, generates many different decision
+trees. Random forest decorrelate these bagged trees by only considering subsets of the
+variables. It then outputs the class that occurs most frequently as the predicted class. This
+produces a model with a lower variance than with a decision tree or a bagged tree(ibid.).
+Random forests have the advantage that irrelevant features do not affect the accuracy of
+the classifier as much as in other classifier such as KNN.
+With random forests we get the added benefit that we can inspect feature importance
+using the Gini index .  The importance of each feature is calculated by summing the
+amount that the Gini index decreases in each decision tree, and getting the mean value
+(ibid.). This can be used to select a subset of important features that contain most of the
+information needed for classification, thereby reducing the dimensionality of a feature
+space.
+2.2.4                                                                                           Naive Bayes Classifier
+Naive Bayes is a classifier based on the Bayes’ theorem.  It assumes there is strong in-
+dependence between features.  Naive Bayes is a probabilistic classifier, meaning it can
+output a probability for the test observation being in a certain class, instead of just pre-
+dicting its class. It classifies a test observation into the most probable class based on its
+variables (ibid.).  Since the features in the Parkinson’s data set are highly correlated in
+some cases, the naive Bayes classifier should be expected to perform relatively poorly
+due to its "naive" assumption that the features are independent.
+10
+
+2.2.5                                                                                          Class Balancing
+Class imbalance is a common challenge that is faced in machine learning. It occurs when
+there is a large imbalance in the number of observations for each class in the training set,
+and can result in a classifier predicting only the majority class to produce a seemingly
+high accuracy. There are several ways to deal with an imbalanced data set, three of which
+are outlined below.
+Random under-sampling takes the majority class and randomly removes observa-
+tions until it matches the number of observations in the minority class. In random over-
+sampling observations in the minority class are duplicated until it matches the number
+of observations in the majority class.
+Synthetic Minority Over-sampling Technique (SMOTE) creates completely new ob-
+servations for the minority class. It does this by randomly selecting an observation x from
+the minority class, then randomly choosing another observation y from x’s K-nearest
+neighbours, and the new, synthesised example is created at a random point between x
+and y. This is done until the classes are balanced.
+It is important to perform balancing after the data has been split into training and
+testing sets to avoid data leakage. Data or information leakage occurs from mistakes in
+the machine learning process that lead to information from the training set being "leaked"
+into the test set, or vice versa. This problem can cause the classifier to effectively memo-
+rise the test set, and produce higher performance metrics than would be expected from
+truly unseen, real world data (Soni 2019). Information leakage can be caused from mis-
+takes as simple as the incorrect ordering of preprocessing steps, and can easily be over-
+looked, so special care must be taken to ensure it is avoided. In a study written about
+the flaws of applying over-sampling before first splitting the data into distinct train/test
+sets, the author, Gilles Vandewiele, disproves several studies that claim near perfect clas-
+sification scores for predicting whether pregnant women would give birth prematurely
+(Vandewiele n.d.).  The problem with random over-sampling first is that it creates du-
+plicates of some observations that could then be used for both training and testing the
+classifier. Since the classifier has already seen some of these duplicated observations in
+the training phase, when it comes to testing, the results will be unrealistically high.
+2.2.6                                                                                          Principal Component Analysis
+The Curse of Dimensionality occurs when there are a large number of variables in a data
+set.  This can lead to a number of different problems such as a risk of overfitting, and
+relationships between variables being hard to interpret. The Parkinson’s disease data set
+used in this project runs into this problem of the Curse of Dimensionality with number
+of features being over 50. There are techniques that can be used to reduce the dimensions
+of a data set. One of these, Random forest feature selection has been described above.
+Principal Componenent Analysis (PCA) is an unsupervised learning method, meaning it
+uses the features of the data but not the target variable. PCA creates derived variables
+called principal components that explain most of the variance in the data. Each of these,
+derived variables or dimensions are a linear combination of the original features (James
+et al. 2013). The derived variables are uncorrelated, which is useful for algorithms such
+as KNN where correlation is an issue (O’Neil and Schutt 2013).  PCA is a method for
+reducing the dimensionality of data through feature extraction, since it derives new vari-
+ables from the existing features. This is different from Random forest feature selection
+11
+
+as it does not eliminate any features. This does not however, mean that it will perform
+better in classification since it does not use the class label when deriving the variables
+and attempts to explain as much variability in the data instead.
+2.3                                                                                              Synthesis
+The data used in this project is a combination of the different biomarkers identified
+through the analysis of the research described in section 2.1. This project has many sim-
+ilarities to Prashanth, S. D. Roy, et al. (2016), and was used as a guide throughout much
+of the initial classification stage. The main difference is in the data that was used to build
+the initial models.  From the research done on previous literature on PPPMI no study
+was found that made a comparison of balancing and feature reduction techniques as is
+done in this project, though this may turn out not to be true . Prior research has used
+inexpensive test data to predict early Parkinson’s, for example Prashanth and Sumantra
+Dutta Roy (2018) who only use UPDRS patient questionnaire data. For this project Ran-
+dom forest feature selection is used in combination with using inexpensive test data to
+produce a subset of the PPMI data set that can be used as an alternative method of diag-
+nosis.
+12
+
+3                                                                                           Research Aims and objectives
+The aim of this project was to complete the data science cycle outlined in Figure 1 using
+the PPMI data set. The main objectives were:
+• Prepare & Clean the PPMI data
+• Exploratory Data Analysis
+• Predict Early Parkinson’s using machine learning algorithms
+• Compare Feature reduction and balancing techniques using PPMI data
+• Produce a subset of the data for early detection containing only inexpensive tests
+• Communicate results
+13
+
+4                                                                                                Data Preparation and Exploratory Data Analysis
+                                                                                                 All the data was obtained from the PPMI database, and was downloaded on the 15 of
+September 2019.
+4.1                                                                                              Feature Description
+4.1.1                                                                                            Unified Parkinson’s Disease Rating Scale (UPDRS)
+The Movement Disorder Society Unified Parkinson’s Disease Rating Scale (MDS-UPDRS
+or UPDRS) is a four part test that evaluates motor and some non-motor symptoms. Parts
+of the test are in the form of patient questionnaires. Part 3 requires a Parkinson’s clinician
+to rate the severity of the patients symptoms. Part 4 was left out for this project as it con-
+tained mostly missing data. The remaining data contains many features but it is possible
+to create aggregate values for each test, making only four new features "updrs1_score",
+"updrs2_score, "updrs3_score", and "updrs_total_score" in the data set for this project.
+From this the UPDRS data it is also possible to calculate a tremor score, and a postural
+instability and gait disorder score.  From these we can then put the patients into cate-
+gories of whether they are in the TD, PIGD, or indeterminate phenotypes by calculating
+the ratio between the scores. These features were also added to the data set.
+4.1.2                                                                                            University of Pennsylvania Smell Identification Test (UPSIT)
+UPSIT is the most common test used to evaluate olfactory function. The maximum value
+for this feature is 40, which would require the patient to correctly identify the 40 different
+odors provided in the test.
+4.1.3                                                                                            Epworth Sleepiness Scale (ESS)
+ESS is used to assess daytime sleepiness. The test is in the form of a patient questionnaire,
+and scores range from 0 to 24
+4.1.4                                                                                            Benton Judgement of Line Orientation Test (BJLOT)
+BJLOT is a test to determine a patient’s visuoperceptual and visuospatial skills (Grant
+and Adams 2009). The patient is asked to match lines that appear in a fan-shaped array
+at the bottom of a page to angles that appear at the top of the page (Steptoe 2010). Scores
+can range from 0 to 30.
+4.1.5                                                                                            Scales for Outcomes in Parkinson’s Disease (SCOPA)
+SCOPA is a short test used to reliably assess the autonomic function of a Parkinson’s
+patient. Scores are on a scale of 0-23 in the PPMI data, testing gastrointestinal, urinary,
+cardiovascular, thermoregulatory, pupillomotor, and sexual function (Movementdisor-
+ders.org 2020).
+14
+
+4.1.6                                                                                        Geriatric Depression Scale (GDS)
+The GDS is a 30 item patient questionnaire used to measure the level of depression ex-
+perienced by the patient. Depression is a common symptom of Parkinson’s with an es-
+timated 50% of patients experiencing some form of depression throughout their illness
+(Parkinson’s Foundation 2020). A score below 5 is considered normal, between 5 and 10
+indicates depression. Anything above 10 is considered moderate to severe depression.
+4.1.7                                                                                        Montreal Cognitive Assessment (MoCA)
+MoCA is used to assess a patient’s level of cognitive impairment.  The test consists of
+30 items with tasks such as drawing clocks to test visuospatial function.  Other tasks
+test memory, attention, language, abstraction, delayed recall, and orientation. Scores can
+range from 0 to 30, with anything above 26 considered normal cognitive function.
+4.1.8                                                                                        Questionnaire for Impulsive-Compulsive Disorders in Parkinson’s Disease
+(QUIP)
+Impulsive and compulsive behaviour has been associated with Parkinson’s disease.
+QUIP is used the measure the level of impulsiveness in the patient by assessing disor-
+ders such as impulsive buying, eating, and gambling. Scores range from 0 to 7.
+4.1.9                                                                                        Cereborospinal Fluid (CSF)
+The Aβ42, α-syn, p-tau, and t-tau variables describe the concentration of each substance
+found in the CSF for each patient.
+4.1.10                                                                                       Neuroimaging
+In the PPMI study, DatSCAN imaging data is reconstructed from raw imaging data, and
+the densities are calculated for the striatal region of the brain.  The PPMI database in-
+cludes densities for the right and left putamen, and the right and left caudate, which are
+used in this project.
+4.1.11                                                                                       Genetic Data
+A data set with the genes of Parkinson’s disease related variants has been compiled in
+the PPMI database.  The value for each variant is the number of minor alleles that the
+patient has for this gene.
+4.2                                                                                          Data Preparation Challenges
+Preparing the data proved to be one of the more challenging aspects of the project as it
+required reading a lot of previous work done on the PPMI data to decide which features
+may be useful in the early detection of Parkinson’s disease. The PPMI database also con-
+tains quite a substantial amount of data, with 72 tables, which made it difficult to find
+the necessary features. Many of the features required some form of aggregation or cal-
+culation using different features spanning many different tables. Many other challenges
+in data preparation were faced along the way due to, for example, the layout of the data
+and data quality issues.
+15
+
+4.3                                                                                              Data Preparation
+Python’s Pandas library was used to read in the CSV files, and to manipulate the
+dataframes produced. The chosen features were added to one table, by using inner, outer,
+right, or left joins as needed. The PPMI is a longitudinal study so it includes many vis-
+its for each patient.  This results in many rows per patient.  Since the aim is to detect
+Parkinson’s early in the progression of the disease, only baseline data is used. This re-
+quired filtering all the data based on the visit ID to only include "BL". Some tables had
+the visit ID as "SC" for "screening" instead of "BL". In other tables it was necessary to just
+include the first visit as the visit ID was not included. This meant using a "GROUPBY"
+on the patient number, sorting based on the date, and then choosing the earliest result
+for each patient. Problems like these, where the same information was stored using dif-
+ferent values across all tables, were encountered throughout the data preparation phase.
+Many of these problems in data inconsistency existing in PPMI stem from the fact that
+it is cross-site, longitudinal study, where the data collection standards vary and change.
+A huge benefit of PPMI being such a large study is that many of these issues are well
+documented, along with possible solutions, within the study documents included in the
+database.  These study documents were used extensively throughout the project, and
+proved to be very helpful in tasks such as calculating aggregate columns, etc.
+Each row in the new table is an observation in the study, with an appropriate diagno-
+sis, used as the target variable in classification. Any duplicated patients were analysed
+to find the cause, and the duplicate removed as needed.
+Out of the 8 cohorts in the PPMI study, only three, Parkinson’s disease patients, Symp-
+toms Without Evidence of Dopaminergic Deficit (SWEDD), and healthy controls, were
+included in the finalised data set. It was later decided to remove the SWEDD cohort for
+all analysis in this project. At this stage, it could have been possible to add the SWEDD,
+prodromal, or other cohorts to the Parkinson’s disease cohort as appropriate, but this
+would need further analysis of the differences between the cohorts, and how they would
+affect the classification results.
+Python functions were written to calculate new variables using the existing columns,
+and were added to the data set in their own columns.  For this Python’s "apply" and
+"lambda" functions were used.  These functions allow us to create more complex logic
+when creating new columns than would be possible without them. Figure 2 shows an
+example of how these functions are used.  In this example the patient is put into one
+of three categories (tremor dominant, postural instability dominant, and indeterminate)
+based on their tremor and postural instability scores. First, the function that will carry
+out the logic is defined.  It’s parameters are the column values that are needed in the
+calculation. Next, using the "apply" and "lambda" function the logic is carried out row
+by row, adding the result to the newly created column.
+16
+
+Class Counts
+Figure 2: Code snippet - "lambda" and "apply" functions
+4.4                                                                                             Missing Values and Imputation
+Once all the data was curated, aggregated, and cleaned, the next step was to deal with
+the missing values. Figure 3 shows the number of non missing values for the features in
+a bar chart. The genetic data has been removed for this visualisation, and is described
+later in this section. From Figure 3 we can see where the missing values occur. Age of
+onset seems to have quite a few missing values but this is due to the fact that the healthy
+controls do not have any value for this column. This column is removed for classification.
+Next we can see that the CSF measurements - α-syn, Aβ42, p-tau, and t-tau - have around
+35 missing values each. The four DatSCAN imaging columns have four missing values
+each. SCOPA, BJLOT, and ESS have one each. The rest of the data is complete.
+Another way of visualising the missing data is using a nullity matrix.  This matrix
+describes the pattern of the missing data. The matrix is an abstraction of the actual data
+set where any cell with a missing value is coloured differently to the cells that do not have
+missing data. This way it can be determined if any rows contain a lot of missing data for
+all variables.  In other words it is easier to visualise patterns of missingness between
+columns as opposed to within columns. This could be useful if most of the missingness
+is due to a small number of rows as it may be feasible to remove these rows instead of
+having to impute the values.  Figure 4 shows the nullity matrix for the features in the
+finalised data set.  There seems to be a pattern of missing values for some patients for
+both the CSF measurments and the DatSCAN imaging data.
+17
+
+Barchart of missing values per feature
+Figure 3: Barchart of missing values per feature
+Nullity matrix of missing values per feature
+Figure 4: Nullity matrix of missing values per feature
+Figure 5 shows the patterns of missingness in the genetic data. The data in general is
+much more complete than for the other features, and it seems to be only a few patients
+that contribute to the majority of the missing data.
+18
+
+Nullity matrix of missing values for genetic data
+Figure 5: Nullity matrix of missing values for genetic data
+The missing values were imputed by calculating the mean of the variables for each co-
+hort. The missing values were then substituted with the mean depending on if they were
+diagnosed with Parkinson’s or not. From doing some preliminary analysis, it was found
+that this method of imputation caused the performance of the classifier to be greatly in-
+creased.  The preliminary analysis produced accuracies well above what was expected
+from a comparison to other research.  This method had increased the bias of the pre-
+dictive models, and it was therefore decided for any further analysis to revert back to a
+previous data set created before the flawed imputation method was applied.  A better
+method of imputation that could have been used is KNN imputation.
+4.5                                                                                            Exploratory Data Analysis
+Exploratory data analysis (EDA) is the process of building intuition for the data set. Ac-
+cording to O’Neil and Schutt (2013) "EDA is a critical part of the data science process".
+Durinig the data preparation phase of this project it was essential to make use of EDA to
+get a feel for which features could be important for predicting early Parkinson’s. It was
+also very helpful in understanding the missingness of features in the data, and to identify
+duplicates. Moving between data preparation and EDA was done in an iterative process
+throughout the early parts of this project.
+After preparing the necessary data, the next step is to profile the data to gain a better
+understanding of the data being dealt with and to formulate hypotheses for the model
+building steps.
+There are 468 observations in the finalised data set. Each observation represents one
+patient, with each of the features described at the beginning of this chapter, and their ap-
+propriate diagnosis. Only patients that were diagnosed with Parkinson’s and the healthy
+controls included in the PPMI study were included in the finalised data set to make it a
+binary classification problem.
+Figure 6 shows the number of observations per the Parkinson’s and healthy control
+cohorts as a bar chart. Of the 468 observations in the data set, 318 observations are with
+Parkinson’s and 150 observations are without Parkinson’s.  There is a clear imbalance
+between the classes, indicating that balancing may be necessary before using machine
+learning algorithms.
+19
+
+Class Counts
+Figure 6: Class Counts Comparison
+Table 1 shows the mean and standard deviation value of each feature for both classes.
+Males make up 64.49% of the study population, with a mean age of 60.97 ± 10.07 years
+and mean years of education of 15.81 ± 2.97.  The mean values for these features are
+similar in the Parkinson’s and healthy control classes.
+Mean and standard deviations of features for each class
+Table 1: Mean and standard deviation of features for each class
+20
+
+From table 1 it is possible to get a feel for what features may be useful in discriminat-
+ing between the classes for classification. It would have been useful to use p-values or
+z-statistics here, and only include the features that had statistical significance for classifi-
+cation.
+Correlation describes the strength and direction of the linear relationship between a
+pair of features. The value for correlation ranges from -1 to +1. A value close to -1 or +1
+means the features have a strong negative or positive linear relationship respectively. A
+value close to zero means there is weak or no linear relationship between the features.
+Figure 7 shows a heat map of the correlation between features. We can see that the UP-
+DRS variables, and the tremor and postural instability scores are quite highly correlated
+with each other. There is a high level of correlation between the four CSF measurements
+as well as between the four neuroimaging variables. SCOPA seems to be moderately cor-
+related with the UPDRS scores. This may be because they measure similar symptoms,
+and could therefore be correlated. UPDRS scores have low correlation with the UPSIT
+and the imaging data. The imaging data and UPSIT are both highly correlated with the
+diagnosis of the patient which is labeled "APPRDX" in the heat map. This suggests that
+these features may be important in the classification of the patient. Variables that have
+a weak linear relationship with the diagnosis of the patient can still contain information
+that is useful in classifying Parkinson’s, and should not be dismissed due to their low
+correlation alone. Figure 8 shows a heat map of the top ten features most correlated with
+the diagnosis of the patient. This figure does not contain any different information except
+that it shows the value of correlation in each cell. The left and right putamen both have a
+correlation with the diagnosis of 0.75, which is quite significant.
+Figure 7: Correlation of features
+21
+
+Figure 8: Correlation of top 10 features
+Table 2: Characteristics of all patients with Parkinson’s and at different ages at onset
+As part of the EDA a study (Pagano et al. 2016) introduced in the literature review
+chapter was followed. This study explored the clinical phenotype and characteristics of
+Parkinson’s disease at different ages at onset.  The tables produced in that study have
+been copied as closely as possible in this project. Table 2 is an example of one of these
+tables, and the rest have been put into the appendix as the age of onset phenotype was not
+further analysed. The results in the table closely resemble those produced in the study
+and served as reassurance that the data produced during the preparation phase was of
+good quality and that there were no miscalculated variables, etc.  Similar to Pagano et
+al. (ibid.) the H&Y stage and UPDRS Part 3 score were higher in the older age at onset
+22
+
+subtypes. For the other parts of UPDRS, there is no clear difference.
+The distribution of the data was plotted for each variable.  Figure 9 shows four of
+these plots, the rest are in the appendix.  These distributions are plotted using kernel
+density instead of histograms to make them more readable. This produces a continuous
+estimate of the histogram data. The values on the y-axis are the probability densities for
+each x-axis value.  For this analysis it is enough to know that the distributions will be
+roughly the same shape as if they were plotted using histograms.
+Age is similarly distributed for the Parkinson’s and healthy control cohorts.  Com-
+pared to the healthy controls the Parkinson’s cohort have a much more spread out dis-
+tribution for the total UPDRS scores, with a mean that looks as if it is around 30.  The
+Parkinson’s distribution tails off to the right to values above 80.  The healthy controls
+has a majority of observations with scores below 20, with a mean around 10. This makes
+sense as the Parkinson’s cohort would score much higher on the UPDRS tests. From these
+plots we can get a sense of the differences in distribution between the cohorts, where their
+means might lie, and if they tail off to the right or left. Box plots are another useful way
+of visualising the data. Figure 10 shows the box plot for some of the features in the data
+set. From this we can see which features may be discriminatory and which are less likely
+to be so.
+Your title
+Figure 9: Distribution plots
+4.6                                                                                            Phenotype switching prediction
+Simuni et al. (2016) showed that there was a significant number of Parkinson’s patients
+that switched between the TD and PIGD phenotypes within the first year of diagnosis.
+Kang, Irwin, et al. (2013) showed that there were lower levels of Aβ42 and p-tau in pa-
+tients within the PIGD phenotype.  Following on from this research a hypothesis was
+formulated about whether it would be possible to predict whether a patient is likely to
+switch phenotype within the first year.  If this were the case it would be quite useful
+in determining the progression of the disease for a patient. To test this hypothesis, the
+tremor and postural instability scores from one year after baseline had to be added to the
+data set. A new column was derived from this new data that described whether the pa-
+tient had switched phenotype or not. The box plots that were produced showed that the
+CSF measurements or any other feature did not show much discriminatory power. Us-
+ing a SVM classifier it was shown that predicting whether a patient was likely to switch
+phenotype produced only slightly better results than randomly guessing. This hypothe-
+sis could have been further researched but for this project was only used as preliminary
+analysis and exploratory purposes.
+23
+
+Figure 10: Box plot of features
+24
+
+5                                                                                               Methods
+5.1                                                                                             Outline
+Predicting early Parkinson’s disease from the PPMI database is a binary classification
+problem.  Since the data is labeled, describing whether the patient is diagnosed with
+early Parkinson’s or not, this will be a supervised learning method. There are many dif-
+ferent classifiers which could be used for this problem, each with its own advantages
+and disadvantages. Four different classifiers are used to identify early Parkinson’s dis-
+ease. These classifiers are Support Vector Machine (SVM), K-Nearest Neighbors (KNN),
+Random Forest, and Naive Bayes.
+Ockham’s razor principle "gives precedence to simplicity: of two competing theories,
+the simpler explanation of an entity is to be preferred" (Duignan 2018).  This principle
+should be applied to machine learning, where simpler classifiers should be preferred over
+more complex classifiers where the performance in the same. On the choice of classifiers
+for this project, both simple (KNN and Naive Bayes) and complex classifiers (SVM and
+Random Forests) were compared.
+The metrics used to compare machine learning techniques are accuracy, specificity,
+sensitivity, and AUC. Accuracy is the number of correctly classified observations di-
+vided by the total number of observations.  Specifictiy is the true negative rate which
+here is the proportion of people who are healthy controls that are correctly classified as
+being healthy controls. Sensitivity is the true positive rate which here is the proportion of
+Parkinson’s patients that are correctly classified as having Parkinson’s. AUC is the area
+under the ROC curve. The ROC curve shows the tradeoff between specificity and sen-
+sitivity (Hastie, Tibshirani, and Friedman 2009). The ROC curve plots the false positive
+rate against the true positive rate for different classification thresholds. The area under
+this curve can be used as a measure Since accuracy was used to optimise the classifiers it
+was used as the main metric of comparison throughout the project. From doing more re-
+search into the different metrics, sensitivity may have been a more appropriate choice of
+metric for this project as correctly classifying Parkinson’s patients as having Parkinson’s
+at the cost of having some healthy controls incorrectly classified as having Parkinson’s is
+more beneficial in this case.
+The analysis carried out on the data set followed the following outline: obtain initial
+results with no balancing or feature reduction, and compare these results to previous
+studies; perform balancing and feature reduction on the data set, and analyse results; use
+random forest feature importance to help identify a smaller subset of features that will
+be less expensive and time consuming for the patient.
+5.2                                                                                             Methods for initial prediction
+The data was split into 70% training data and 30% testing data using the Pandas function
+train_test_split.  Within this function a parameter was set that stratifies the data.  This
+means that there will be the same proportion of each class in each of the train/test splits
+as is in the original data set. Feature scaling was then carried out on the data using the
+Panda’s Standard Scaler method. This preprocessing step centres the feature values by
+taking away the mean from the value and dividing the result by the standard deviation.
+After the data is standardised, the classifiers are optimised using the training data set.
+The models are then fit on the training set, and used to predict the target values of the
+25
+
+test set. The four performance metrics are calculated.
+This process was repeated 10 times, each time the metrics were added to an array.
+The mean and standard deviation of each metric was then calculated using this metric
+array. The reason for doing this instead of simply using 10 fold cross validation is that
+we need to optimise each classifier for each random split of training and testing data in
+a nested fashion. This is also the case when doing feature selection and balancing which
+are described in a later section. Also, the reason for not simply running the experiment
+once is that the results produced are different for each random train/test split. It would
+be possible to simply get lucky with one run of the experiment producing misleadingly
+high metrics. Even when running the experiment using the average of 10 iterations, the
+end results can vary slightly from one run to the next.  The more iterations we use to
+calculate the average metrics the more realistic the results will be, but this comes at the
+tradeoff of taking much more time.
+From the initial results, it was possible to compare the classifiers for the given dataset.
+These results were compared to a previous study that carried out similar tests.
+5.3                                                                                           Hyperparameter Tuning
+The hyperparameters for the SVM, KNN, and Random forest classifiers were tuned using
+10 fold cross validation and a gridsearch. For SVM the hyperparameters tuned were the
+C and gamma values. The C value determines how many training observations can be
+on the wrong side of the hyperplane. The higher the value for C the more tolerant the
+classifier is of slack variables, and the larger the margin between classes will be.  "C
+controls the bias-variance trade-off" (James et al. 2013).  The gamma value determines
+how much a single training observation can influence the model.  The kernel for the
+SVM used throughout this project was the radial basis function. For KNN the number
+of neighbours considered for classification of new observations was tuned. For random
+forest the hyperparameters that were optimised were the number of trees, the maximum
+depth of each tree, the minimum samples needed at each leaf node, and the minimum
+number of samples needed to split a tree.
+To avoid data leakage, the hyperparameters must be tuned on only the training data.
+This means that the optimisation must take place inside each test loop. This added con-
+siderable time to the running of each experiment. A better way of doing this may have
+been to find the parameters that were most often chosen by the gridsearch on a certain
+number of random splits, before running any experiments. These parameters could then
+be set as the parameters for all experiments, and the run time would be greatly reduced.
+This may come at a slight tradeoff to accuracy, but would allow us to run the experiments
+for many more iterations, possibly producing more realistic results.
+5.4                                                                                           Methods for comparison of balancing and dimensionality reduction tech-
+niques
+In this section two dimensionality reduction techniques, PCA and random forest feature
+selection, were compared. Three balancing techniques are also compared for each of the
+dimensionality reduction techniques. The balancing techniques used are random under-
+sampling, random over-sampling, and SMOTE using the Python package imblearn.
+This produced 8 tables of results, four for PCA combined with each of the three bal-
+ancing techniques and the unbalanced data set, and four for random forest importance
+26
+
+combined with each of the three balancing techniques and the unbalanced data set. These
+results were then summarized by taking the highest accuracy obtained, along with the
+classifier that produced the accuracy, and displayed in a table.
+The objective of this experiment was to identify which classifier performed best for
+each combination of dimensionality reduction method and balancing technique used.
+From the results it was investigated whether the methods produced vastly different
+scores from the initial results, or if any one technique favoured or disfavoured any one
+classifier.
+The method for producing the results for this section are the same to the method used
+to produce the initial results with balancing and feature reduction techniques added as
+necessary. Again, the data set is split into 70% training and 30% testing data. The training
+set is standardised and the testing data is transformed. It is important to balance the data
+on the training data only, after the feature reduction methods have been applied. Again,
+this is to avoid data leakage.
+5.5                                                                                            Producing subset of non-expensive tests to predict early Parkinson’s
+A subset of the features that only included tests that were relatively inexpensive and less
+time consuming was produced. First, the expensive tests were removed. These were the
+neuroimaging and genetic data, which combined can cost upwards of e 5000. Second,
+the very time consuming tests were removed.  This included all the CSF measurments
+and UPDRS tests as they require assistance from a Parkinson’s clinician to complete. The
+remaining features were then further reduced using Random forest feature importance
+to remove any non-essential tests.  The final data set was then tested on the different
+classifiers on the unbalanced set in the same way as in the other experiments in this
+project, with the mean performance metrics and the standard deviations calculated.
+27
+
+6                                                                                               Results
+6.1                                                                                             Initial results: no feature reduction
+The mean and standard deviations of the performance metrics for each of the four classi-
+fiers is shown in Table 3. All classifiers perform quite well on the data set with SVM and
+Random Forests having testing accuracies above 97% and KNN and Naive Bayes having
+accuracies above 94%.  It seems that the more complex algorithms better predict early
+Parkinson’s in terms of accuracy for this data set.
+Training metrics were included to identify if any classifier was overfitting or underfit-
+ting. If the training accuracy was much higher than the testing accuracy, then it is likely
+that the classifier has overfit on the training data set, and generalises poorly on unseen
+data.
+SVM outperforms all other classifiers when it comes to AUC. Random forest has the
+highest sensitivity suggesting it may be superior in reducing the amount of false nega-
+tives produced in the prediction, but the differences between all classifiers is minimal.
+Due to the relationship between specificity, sensitivity, and accuracy, we can see that
+it is the specificity of KNN and Naive Bayes that brings down their accuracy scores - their
+sensitivity scores are quite high compared to their specificity scores.
+Table 3: Performance metrics for classifiers with no feature reduction or balancing
+Comparing the results to those achieved by Prashanth, S. D. Roy, et al. (2016), we can
+see they are quite similar. Prashanth, S. D. Roy, et al. (ibid.) achieved a testing accuracy
+of 96.4 ± 1.08% for SVM, 96.18 ± 1.27% for Random forest, and 93.12 ± 1.49% for Naive
+Bayes. They also used Boosted trees and Logistic Regression, but did not use KNN. The
+results produced in this project, were slightly higher than those in Prashanth, S. D. Roy,
+et al. (ibid.). This may be due to them having used the mean of 100 runs compared to
+only 10 runs in this project, so have probably achieved more realistic results. There is also
+more data included in this project, compared to the more focused approach of Prashanth,
+S. D. Roy, et al. (ibid.). For the other metrics the results were also slightly increased in
+comparison to Prashanth, S. D. Roy, et al. (ibid.).
+The process of producing the above table was repeated for each of the three balancing
+techniques.  The highest accuracy of each technique along with the classifier that pro-
+duced the accuracy is summarised in the Table 4. The complete tables have been added
+to the appendix.
+28
+
+Table 4: Summary of classifier performance on the non feature reduced data set
+There is no significant difference between the 4 methods with all producing accuracies
+between 97 and 98%. The classifier that produced the highest accuracy for each technique
+is SVM. SMOTE slightly outperformed all other balancing methods with an accuracy of
+97.82%, and random under sampling produced the worst performance with 97.06%.
+Figure 11: ROC curves for classifiers on unbalanced data set
+Figure 11 shows the ROC curve produced for a random train/test split on the unbal-
+anced data set. The AUCs are similar to the averages produced in Table 3. We can see that
+the SVM and Random forest classifiers dominate the KNN and Naive Bayes classifiers at
+each threshold.
+29
+
+6.2                                                                                          PCA results
+Table 5 shows the average results achieved after using PCA on the unbalanced data set.
+The results are not as high as with the non dimensionality reduced data set, but are
+not significantly lower. Again, SVM outperformed all other classifiers in accuracy with
+96.72% and AUC with 99.36%. Random forest had the worst accuracy with 95.21%. Using
+only SVM for comparison, we can see that there has been a trade off between specificity
+and sensitivity when using PCA compared to the non dimensionality reduced data set.
+There is a higher sensitivity when using PCA, which could be important for a model
+trying to predict Parkinson’s.
+Table 5: Performance metrics for classifiers on unbalanced data set with PCA
+Because the data set was reduced to two principal components it was possible to
+graph these components using a scatter plot as in Figure 12.  The first plot shows the
+observations plotted using their principal components for the unbalanced data set. Be-
+fore having used any of the classifiers on the data, this was a useful way to see if there
+was any significant overlap of the classes using only two components or if they could be
+clearly separated.
+We can see that there is a clear separation between the healthy controls (green) and
+the patients diagnosed with Parkinson’s (red) when using PCA. This suggests that there
+should be a decent predictive power using this method. This was validated in Table 5.
+It was also a useful way to visualise the difference between the unbalanced data set
+and the balanced sets.  For SMOTE, there is a greater density of healthy control data
+points compared to the other methods.  These are the data points synthesised through
+the process described in section 2.2.5. The Parkinson’s disease data points stay the same
+as the original because they are the majority class.
+For the random under-sampling plot, there are clearly fewer Parkinson’s disease data
+points than in the other plots. The Parkinson’s data points have randomly been removed
+to match the number in the minority class. The minority class stays the same.
+The random over-sampling plot, looks the exact same as the unbalanced plot. This
+is because the minority class data are duplicated and the added data points lie directly
+on top of the other data points.  Although it cannot be seen on this plot, there are an
+equal number of healthy control and Parkinson’s disease data points after random over-
+sampling.
+30
+
+Figure 12: PCA plot comparison
+Table 6 summarises the highest performances of PCA for each balancing method,
+along with the classifier that produced it. The complete tables are in the appendix. We can
+see that SVM again outperforms the other classifiers for random over-sampling, SMOTE,
+and the unbalanced data set.An interesting result is that Naive Bayes outperformed all
+other classifiers for random under-sampling. The sudden increase in the performance of
+the under-sampled Naive Bayes classification as opposed to the whole data set is likely
+due to the principal components not being correlated. Naive Bayes’ performance suffers
+if the independence assumption of the features is not satisfied, which it is not for the
+whole data set.  When the independence assumption is held it does not need a lot of
+data to perform well, possibly explaining why it outperforms the others when the data
+is under-sampled (Chauhan 2018).
+Out of the balancing methods, SMOTE performs the best with an average accuracy of
+95.88%. Under-sampling slightly outperformed over-sampling after PCA is performed,
+31
+
+but this difference is probably not significant.
+Table 6: Summary of classifier performance on the PCA reduced data set
+Figure 13 shows the ROC curves for the classifiers on the unbalanced data set with
+PCA. Again, they were produced on a random train/test split that resembled the aver-
+ages produced on the unbalanced set.
+Figure 13: ROC curves for classifiers on unbalanced data set with PCA
+32
+
+6.3                                                                                           Random Forest Importance feature selection results
+The features that had an importance level over 0.12 (12%) were chosen for the training
+of the four classifiers. These were most commonly a combination of imaging data and
+UPDRS data. About two or three features were chosen each time, with either the putamen
+or UPDRS being the highest scorers.
+Table 7 shows the means and standard deviations of the four classifiers on the feature
+reduced, unbalanced data set. We can see that SVM performs relatively poorly on this
+data set with a testing accuracy of 85.97%, suggesting that SVM with a radial basis kernel
+does not perform well when trained on a data set with very few features. It also has a very
+high standard deviation of 12.93% compared to other tests. This suggests that the choice
+of training and testing sets had a high impact on the classifier. KNN and Naive Bayes
+both work very well with accuracies of 98.32% and 98.15% respectively. SVM produced
+a specificity of 56.84% and a standard deviation of 41.11%. Since all these results were
+highly unexpected and unusual, the method to produce these results was re-examined.
+Although nothing obvious was found that might have caused these results, it would not
+be surprising if there were some mistake in the method. However, KNN’s score of 98.32%
+is still considered the highest overall score of the project, as no reason to exclude these
+results was found. The same process was repeated to produce the results for the balanced
+data sets which are presented in the appendix, and are summarised later in this section.
+Table 7: Performance metrics for classifiers on unbalanced data set with Random forest
+feature selection
+Table 8 shows an example of the feature importances calculated by the random forest.
+They are sorted from highest to lowest importance. We can see that imaging data scores
+quite well, and the genetic data scores quite poorly. This shows only the top section of
+the feature importance table, and there are 64 other rows which have been excluded, with
+the lower section being mainly genetic data. This shows that the genetic data may not be
+very important for predicting the diagnosis of the patient.
+33
+
+Table 8: Example of ranked Random forest feature importances
+After removing the genetic data we can better visualise the feature importances by
+plotting them on a barchart in Figure 14.  The features that are included for the train-
+ing of the classifiers can be identified easily as those over the 0.12 threshold - UPDRS 3
+score, total UPDRS score, right putamen, and left putamen. It is interesting to note that
+the UPDRS scores did not have any correlation with the diagnosis of the patient dur-
+ing the EDA phase, but still contain other information that is important for classification
+indicating they must be related in some way.
+34
+
+Figure 14: Random Forest feature importances barchart
+Table 9 summarises the results obtained for random forest importance feature selec-
+tion.  The first observation that can be made is that SVM did not produce any of the
+highest accuracies, and KNN, which underperformed SVM in most other cases, had the
+highest accuracy for both random over-sampling and the unbalanced data. Again, Naive
+Bayes outperformed the other classifiers for random under-sampling with an accuracy
+of 97.06%.  SMOTE balancing worked best out of the balanced data sets, and random
+over-sampling produced the worst results.
+Summary of Random forest feature selection accuracies
+Table 9: Summary of classifier performance on the Random forest feature selection re-
+duced data set
+KNN obtained the highest overall accuracy for this project, with 98.32% on the unbal-
+anced data set. KNN benefits a huge amount from the reduction in features. Although
+SVM’s accuracy for this feature reduced data set was not as good as in the other tests, it
+still outperformed all other classifiers when it came to AUC. Figure 15 shows the ROC
+curves for the classifiers with the Random forest reduced data set, with SVM still scoring
+35
+
+highly on AUC.
+Figure 15: ROC curves for classifier on unbalanced data set with Random forest feature
+selection
+6.4                                                                                              Comparison of dimensionality reduction techniques
+Table 10 shows a summary of the results produced before and after applying dimension-
+ality reduction techniques on the data set. Since SMOTE achieved the highest accuracies
+of the balancing techniques it is used to compare the performance of each dimensionality
+reduction technique before and after balancing.
+Random forest importance feature selection produced higher results than PCA for
+both the balanced and unbalanced data set. Both PCA and Random forest importance
+performed better in terms of accuracy when using the unbalanced data set.  This indi-
+cates that accuracy may not be the best performance metric to use when comparing the
+balancing techniques, as a classifier could potentially predict only the majority class for
+an unbalanced data set and still get a high accuracy.
+Neither PCA nor Random Forest importance feature selection outperform the non
+dimensionality reduced data set when they were balanced. This result is to be expected
+as some information about the data is lost when reducing the dimensionality in both
+PCA and Random Forest feature selection.  For this project PCA was reduced to two
+principal components, but it would have been possible to derive principal components
+that accounted for a certain percentage of the variance in the data set.  This was not
+done as it would most likely have created more than two principal components making
+it impossible to plot and compare them as is done in section 6.2. It is likely that deriving a
+36
+
+greater number of principal components that explained 99% of the variance would have
+produced better results in classification than were produced in this project.  Figure 16
+shows the ROC curves for each feature reduction technique using a SVM on a random
+train/test split.
+Table 10: Summary of feature reduction technique accuracies
+Your title
+Figure 16: ROC curve for SVM with each feature reduction technique
+6.5                                                                                           Results of subset of data
+After removing the neuroimaging data, genetic data, CSF measurements, and UPDRS
+data, nine features were left in the data set. These were the patients’ years of education,
+dominant hand, and their scores for the UPSIT, GDS, ESS, BJLOT, MoCA, QUIP, and
+SCOPA tests. These tests are all quite inexpensive, with UPSIT being the most expensive
+37
+
+at approximately e 30, and each only takes 10 to 20 minutes to complete.
+Figure 17 shows the feature importances of the remaining data.  Keeping only the
+features that have an importance over 0.12, we are left with three features UPSIT, MoCA,
+and SCOPA.
+Figure 17: Feature importances for inexpensive tests barchart
+The results of the four classifiers are presented in Table 11. All classifiers produced
+reasonable results with SVM giving the highest accuracy of 86.61% and an AUC of
+91.36%. These results are similar to those achieved in Prashanth, S. D. Roy, et al. (2014),
+which built predictive models using UPSIT and REM sleep disorder data for an accuracy
+of 85% as mentioned in section 2.1.2. Adding MoCA and SCOPA test data to the REM
+sleep disorder and UPSIT data may be beneficial for classification performance without
+adding significant extra cost for diagnosis.
+Table 11: Performance metrics for subset of inexpensive tests
+38
+
+7                                                                                                Conclusion
+This project has gone through the data science process using the PPMI data to explore
+aspects of Parkinson’s disease.  The main objectives outlined in Chapter 3 have been
+achieved.  Early Parkinson’s was predicted with an accuracy of 98.32% using a KNN
+classifier.  A more reliable result as it was possible to compare to prior research is that
+of the SVM on the unbalanced data set which achieved an accuracy of 97.64%. This is
+a slight increase in performance to the research that it was compared to in this project.
+Feature reduction and balancing techniques were compared, with Random forest feature
+selection outperforming PCA, and SMOTE outperforming the other balancing methods.
+A subset containing only UPSIT, MoCA and SCOPA test data produced an accuracy of
+86.61%. This is also a slight increase to prior research that uses UPSIT and REM sleep dis-
+order data, suggesting that the addition of MoCA and SCOPA may be useful for detect-
+ing Parkinson’s with little added cost or time. For tests that are inconclusive, DatSCAN
+imaging or UPDRS could be used to confirm the diagnosis.
+7.1                                                                                              Limitations
+Since this project was a learning process, starting with little knowledge of Python, ma-
+chine learning, data analysis or Parkinson’s disease, there are many limitations to this
+project. The PPMI data set is the perfect example of how challenging big data can be. For
+this project only baseline test data is used but there are a vast number of different visits
+for each patient that could have been used for temporal data analysis of the progression
+of the disease. A large number of features were added to the finalised data set used in the
+analysis sections of this project, but there are numerous features that were not researched
+that could have been very useful in the classification stage. For example, although some
+sleep disorder data was included, REM sleep disorder data was not. REM sleep disorder
+data has been shown to have discriminatory power for early detection of Parkinson’s,
+and would have been an inexpensive test to add to the subset produced in this project.
+Unfortunately this research was not encountered prior to the model building part of this
+project. Many studies also used ratios of the CSF measurements and neuroimaging data,
+which was not done in this study.
+Having had to learn Python along the way meant that much of the code written was
+done in an inefficient way. Before learning about functions such as the lambda function,
+many things were done in a very manual and messy way. Having no knowledge of how
+long the different tasks in the data science process would take meant it was difficult to
+plan ahead. For example, the data preparation phase took much longer than anticipated
+and, therefore, took time away from other important tasks.
+Avoiding data leakage was of concern when building the machine learning models,
+and although every effort was made to make sure it did not occur there is still the pos-
+sibility that it did, thereby unrealistically altering the results. Another limitation of this
+study is in the comparison to other research.  The averages produced for the different
+classifiers were the means of ten runs while other research used up to a hundred runs.
+From having run the experiments a few different times it was observed that there was
+some variability in the results due to random train/test splits.  Running these experi-
+ments a greater number of times would produce more realistic results. There may also
+be mistakes within the method used to produce the results in this project that could have
+lead to slight overfitting or other problems.
+39
+
+References
+Chauhan,  Gaurav                                                                               (2018).   “All  about  Naive  Bayes”.  In:  URL:  https   :   /   /
+towardsdatascience.com/all-about-naive-bayes-8e13cef044cf.
+Duignan, Brian (2018). “Occam’s razor”. In:
+Grant, Igor and Kenneth Adams (2009). Neuropsychological Assessment of Neuropsychiatric
+and Neuromedical Disorders. Oxford University Press.
+Hastie, Trevor, Robert Tibshirani, and Jerome Friedman (2009). The Elements of Statistical
+Learning. Springer.
+Holden, S.K. et al. (2018). “Progression of MDS-UPDRS Scores Over Five Years in De
+Novo Parkinson Disease from the Parkinson’s Progression Markers Initiative Co-
+hort”. In: Movement Disorder Clinical Practice 5.1, pp. 47-53. URL: https://doi.org/
+10.1002/mdc3.12553.
+James, Gareth et al. (2013). An Introduction to Statistical Learning. Springer.
+Kang, Ju-Hee, David J. Irwin, et al. (Oct. 2013). “Association of Cerebrospinal Fluid -
+Amyloid 1-42, T-tau, P-tau181, and -Synuclein Levels With Clinical Features of Drug-
+Naive Patients With Early Parkinson Disease”. In: JAMA Neurology 70.10, pp. 1277-
+1287. URL: https://doi.org/10.1001/jamaneurol.2013.3861.
+Kang, Ju-Hee, B Mollenhauer, et al. (2016). “CSF biomarkers associated with disease het-
+erogeneity in early Parkinson’s disease: the Parkinson’s Progression Markers Initia-
+tive study”. In: Acta neuropathologica 131, pp. 935-949. URL: https://doi.org/10.
+1007/s00401-016-1552-2.
+Liu, L. et al. (2020). “A new machine learning method for identifying Alzheimer’s dis-
+ease”. In: Simulat. Model. Pract. Theory, 99 (2020).
+Mahadevan, Nikhil et al. (Jan. 2020). “Development of digital biomarkers for resting
+tremor and bradykinesia using a wrist-worn wearable device”. In: npj Digital Medecine
+3.5, pp. 75-87. URL: https://doi.org/10.1038/s41746-019-0217-7.
+Movementdisorders.org  (2020).  Scales  for  Outcomes  in  Parkinson’s  Disease-COGnition
+(SCOPA-COG). URL: https : / / www . movementdisorders . org / MDS / MDS - Rating -
+Scales/Scales- for- Outcomes- in- Parkinsons- Disease- COGnition- SCOPA- COG.
+htm (visited on 03/28/2020).
+Nalls, M. A. et al. (2016). “Baseline genetic associations in the Parkinson’s Progression
+Markers Initiative (PPMI)”. In: Movement disorders : official journal of the Movement Dis-
+order Society 31.1, pp. 79-85. URL: https://doi.org/10.1002/mds.26374.
+O’Neil, Cathy and Rachel Schutt (Oct. 2013). Doing Data Science. O’Reilly.
+Pagano et al. (2016). “Age at onset and Parkinson disease phenotype”. In:
+Parkinson’s Foundation (2020). Depression. URL: https : / / www . parkinson . org /
+Understanding- Parkinsons/Symptoms/Non- Movement- Symptoms/Depression (vis-
+ited on 03/28/2020).
+Prashanth, R., S. D. Roy, et al. (2014). “Parkinson’s disease detection using olfactory loss
+and REM sleep disorder features”. In: 2014 36th Annual International Conference of the
+IEEE Engineering in Medicine and Biology Society, pp. 5764-5767.
+— (May 2016). “High-Accuracy Detection of Early Parkinson’s Disease through Multi-
+modal Features and Machine Learning”. In: International Journal of Medical Informatics
+90.1, pp. 13-21. URL: https://doi.org/10.1016/j.ijmedinf.2016.03.001.
+Prashanth, R. and Sumantra Dutta Roy (Nov. 2018). “Early detection of Parkinson’s dis-
+ease through patient questionnaire and predictive modelling”. In: International Journal
+40
+
+of Medical Informatics 119, pp. 75-87. URL: https://doi.org/10.1016/j.ijmedinf.
+2018.09.008.
+Simuni, Tanya et al. (July 2016). “How stable are Parkinson’s disease subtypes in de novo
+patients: Analysis of the PPMI cohort?” In: Parkinson’s and related disorders 28, pp. 62-
+67. URL: https://doi.org/10.1016/j.parkreldis.2016.04.027.
+Soni,  Devin                                                                                    (2019).  Data  Leakage  in  Machine  Learning.  URL:  https   :   /   /
+towardsdatascience.com/data-leakage-in-machine-learning-10bdd3eec742.
+Steptoe,  Andrew  (2010).  Handbook  of  Behavioral  Medicine:  Methods  and  Applications.
+Springer.
+Towey, David J., Peter G. Bain, and Kuldip S. Nijran (Aug. 2011). “Automatic classifica-
+tion of 123I-FP-CIT (DaTSCAN) SPECT images”. In: Nuclear Medicine Communications
+32, pp. 699-707.
+Vandewiele, Gilles (n.d.). Overly Optimistic Prediction Results on Imbalanced Data: Flaws and
+Benefits of Applying Over-sampling. URL: https://arxiv.org/abs/2001.06296.
+Vogel, Gretchen (1997). “Gene Discovery Offers Tentative Clues to Parkinson’s”. In: Sci-
+ence 276.5321, pp. 1973-1973. ISSN: 0036-8075. DOI: 10.1126/science.276.5321.1973.
+eprint: https://science.sciencemag.org/content/276/5321/1973. URL: https:
+//science.sciencemag.org/content/276/5321/1973.
+Wagner, A., N. Fixler, and Y. S. Resheff (2017). “A wavelet-based approach to monitoring
+Parkinson’s disease symptoms”. In: 2017 IEEE International Conference on Acoustics,
+Speech and Signal Processing (ICASSP), pp. 5980-5984.
+A  Appendix
+A.1                                                                                             EDA
+Figure 18: Age at onset extra 1
+41
+
+Figure 19: Age at onset extra 2
+42
+
+Figure 20: Complete distributions
+43
+
+A.2                                                                  Results
+Figure 21: No feature reduction results with random over-sampling
+Figure 22: No feature reduction results with random under-sampling
+Figure 23: No feature reduction results with SMOTE balancing
+Figure 24: PCA results with random over-sampling
+44
+
+Figure 25: PCA results with random under-sampling
+Figure 26: PCA results with SMOTE balancing
+Figure 27: Random forest feature selection results with random over-sampling
+Figure 28: Random forest feature selection results with random under-sampling
+45
+
+Figure 29: Random forest feature selection results with SMOTE balancing
+46
